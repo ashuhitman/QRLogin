@@ -2,6 +2,7 @@ import express from "express";
 import http from "http";
 import { Server } from "socket.io";
 import cors from "cors";
+import { log } from "console";
 
 const PORT = 8000;
 const app = express();
@@ -10,9 +11,18 @@ app.use(cors());
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "",
+    origin: "http://localhost:5173",
     methods: ["GET", "POST"],
   },
+});
+
+io.on("connection", (socket) => {
+  console.log(`User connected: ${socket.id}`);
+  socket.on("join_room", (data) => socket.join(data));
+  socket.on("send_message", (data) => {
+    console.log(data);
+    socket.to(data.room).emit("receive_message", data.message);
+  });
 });
 
 app.get("/", (req, res) => {
